@@ -25,7 +25,9 @@ SOFTWARE.
 package multilang.depends.util.file;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Recursively visit every file in the given root path using the 
@@ -43,6 +45,7 @@ public class FileTraversal {
 	
 	IFileVisitor visitor;
 	private ArrayList<String> extensionFilters = new ArrayList<>();
+	private List<String> excludePaths = new ArrayList<>();
 	boolean shouldVisitDirectory = false;
 	boolean shouldVisitFile = true;
 	public FileTraversal(IFileVisitor visitor){
@@ -65,6 +68,9 @@ public class FileTraversal {
 		if (files == null)
 			return;
 		for (int i = 0; i < files.length; i++) {
+			if (isExclude(files[i])) {
+				continue;
+			}
 			if (files[i].isDirectory()) {
 				travers(files[i]);
 				if (shouldVisitDirectory) {
@@ -99,5 +105,22 @@ public class FileTraversal {
 		for (String fileSuffix:fileSuffixes){
 			extensionFilter(fileSuffix);
 		}
+	}
+	public void setExcludePaths(List<String> excludePaths) {
+		this.excludePaths = excludePaths;
+	}
+
+	public boolean isExclude(File file) {
+		if (excludePaths.size() == 0) return false;
+		for (String exc : excludePaths) {
+			try {
+				if (file.getCanonicalPath().startsWith(FileUtil.uniqFilePath(exc))) {
+					return true;
+				}
+			}catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return false;
 	}
 }
